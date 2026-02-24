@@ -1,0 +1,7 @@
+app.sys/
+static/audio/*.mp3
+python_installer.exe
+__pycache__/
+*.pyc
+.vscode/
+.idea/

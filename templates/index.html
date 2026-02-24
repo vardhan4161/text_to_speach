@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TTS Agent | Modern Speech Synthesis</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+
+    <div class="container">
+        <div class="glass-card">
+            <h1>TTS Agent</h1>
+
+            <div class="input-group">
+                <textarea id="textInput" placeholder="Enter your text here (up to 1000 characters)..."></textarea>
+            </div>
+
+            <div class="controls-grid">
+                <div class="select-wrapper">
+                    <label>Language (Auto-Translate)</label>
+                    <select id="langSelect">
+                        <option value="en" selected>English</option>
+                        <option value="hi">Hindi (हिंदी)</option>
+                        <option value="te">Telugu (తెలుగు)</option>
+                        <option value="ta">Tamil (தமிழ்)</option>
+                        <option value="kn">Kannada (ಕನ್ನಡ)</option>
+                        <option value="ml">Malayalam (മലയാളം)</option>
+                        <option value="bn">Bengali (বাংলা)</option>
+                        <option value="mr">Marathi (मराठी)</option>
+                        <option value="gu">Gujarati (ગુજરાતી)</option>
+                        <option value="pa">Punjabi (ਪੰਜਾਬੀ)</option>
+                        <option value="ur">Urdu (اردو)</option>
+                    </select>
+                </div>
+                <div class="select-wrapper">
+                    <label>Voice Gender</label>
+                    <select id="genderSelect">
+                        <option value="Female" selected>Female</option>
+                        <option value="Male">Male</option>
+                    </select>
+                </div>
+            </div>
+
+            <button id="generateBtn" class="btn">Generate Speech</button>
+
+            <div id="statusMsg" class="status"></div>
+
+            <div id="audioWrapper" class="audio-container">
+                <audio id="audioPlayer" controls>
+                    Your browser does not support the audio element.
+                </audio>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const textInput = document.getElementById('textInput');
+        const langSelect = document.getElementById('langSelect');
+        const genderSelect = document.getElementById('genderSelect');
+        const generateBtn = document.getElementById('generateBtn');
+        const statusMsg = document.getElementById('statusMsg');
+        const audioWrapper = document.getElementById('audioWrapper');
+        const audioPlayer = document.getElementById('audioPlayer');
+
+        generateBtn.addEventListener('click', async () => {
+            const text = textInput.value.trim();
+            const lang = langSelect.value;
+            const gender = genderSelect.value;
+
+            if (!text) {
+                showStatus('Please enter some text.', 'error');
+                return;
+            }
+
+            // UI feedback
+            generateBtn.disabled = true;
+            generateBtn.innerText = 'Generating...';
+            showStatus('', '');
+            audioWrapper.style.display = 'none';
+
+            try {
+                const response = await fetch('/speak', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ text, lang, gender }),
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    showStatus(data.message, 'success');
+                    audioPlayer.src = data.audio_path;
+                    audioWrapper.style.display = 'block';
+
+                    // Auto-play
+                    audioPlayer.play().catch(e => {
+                        console.log("Auto-play blocked by browser. User interaction required.");
+                    });
+                } else {
+                    showStatus(data.message, 'error');
+                }
+            } catch (error) {
+                showStatus('An unexpected error occurred. Please try again.', 'error');
+                console.error(error);
+            } finally {
+                generateBtn.disabled = false;
+                generateBtn.innerText = 'Generate Speech';
+            }
+        });
+
+        function showStatus(msg, type) {
+            statusMsg.innerText = msg;
+            statusMsg.className = 'status ' + type;
+        }
+    </script>
+</body>
+
+</html>
